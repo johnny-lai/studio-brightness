@@ -13,7 +13,6 @@
 #include <commctrl.h>
 #include <strsafe.h>
 #include "resource.h"
-#include "hid.h"
 #include "studio_display.h"
 #include <initguid.h>
 #include <format>
@@ -240,7 +239,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_DESTROY:
         deinitKeyboardHook();
-        hid_deinit();
+        display.deinit();
         DeleteNotificationIcon();
         PostQuitMessage(0);
         break;
