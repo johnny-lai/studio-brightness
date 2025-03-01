@@ -14,6 +14,7 @@
 #include <strsafe.h>
 #include "resource.h"
 #include "hid.h"
+#include "studio_display.h"
 #include <initguid.h>
 #include <format>
 #include <cstdlib>
@@ -45,32 +46,23 @@ static HHOOK hook = nullptr;
 static bool holdKey1Down = false;
 static bool holdKey2Down = false;
 static ULONG currentBrightness = 30000;
+static StudioDisplay display;
 
-static void onStepDown () {
-  if (currentBrightness > BRIGHTNESS_MIN + BRIGHTNESS_STEP) {
-    currentBrightness -= BRIGHTNESS_STEP;
-  } else {
-    currentBrightness = BRIGHTNESS_MIN;
-  }
-
-  int err = hid_setBrightness(currentBrightness);
+static void onStepDown() {
+  int err = display.stepBrightness(-BRIGHTNESS_STEP);
   if (err < 0) {
-    MessageBoxA(nullptr, std::format("hid_setBrightness returned {}\n", err).data(), "studio-brightness", MB_ICONERROR);
-    currentBrightness = 30000;
+    MessageBoxA(nullptr,
+                std::format("hid_setBrightness returned {}\n", err).data(),
+                "studio-brightness", MB_ICONERROR);
   }
 }
 
 static void onStepUp () {
-  if (currentBrightness < BRIGHTNESS_MAX - BRIGHTNESS_STEP) {
-    currentBrightness += BRIGHTNESS_STEP;
-  } else {
-    currentBrightness = BRIGHTNESS_MAX;
-  }
-
-  int err = hid_setBrightness(currentBrightness);
+  int err = display.stepBrightness(+BRIGHTNESS_STEP);
   if (err < 0) {
-    MessageBoxA(nullptr, std::format("hid_setBrightness returned {}\n", err).data(), "studio-brightness", MB_ICONERROR);
-    currentBrightness = 30000;
+    MessageBoxA(nullptr,
+                std::format("hid_setBrightness returned {}\n", err).data(),
+                "studio-brightness", MB_ICONERROR);
   }
 }
 
@@ -137,16 +129,13 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, [[maybe_unused]] PWSTR lpC
     HWND hwnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, 0, 250, 200, nullptr, nullptr, g_hInst, nullptr);
 
-    int err = hid_init();
-    if (err < 0) {
-      MessageBoxA(nullptr, std::format("hid_init returned {}", err).data(), "studio-brightness", MB_ICONERROR);
-      return EXIT_FAILURE;
-    }
+    display.setMinBrightness(BRIGHTNESS_MIN);
+    display.setMaxBrightness(BRIGHTNESS_MAX);
 
-    err = hid_getBrightness(&currentBrightness);
+    int err = display.init();
     if (err < 0) {
-      MessageBoxA(nullptr, std::format("hid_getBrightness returned {}", err).data(), "studio-brightness", MB_ICONERROR);
-      currentBrightness = 30000;
+        MessageBoxA(nullptr, std::format("hid_init returned {}", err).data(), "studio-brightness", MB_ICONERROR);
+        return EXIT_FAILURE;
     }
 
     err = initKeyboardHook();

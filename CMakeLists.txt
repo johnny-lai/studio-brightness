@@ -6,7 +6,7 @@ endif()
 
 project(StudioBrightness LANGUAGES CXX)
 
-add_executable(studio-brightness WIN32 src/main.cpp src/hid.cpp studio-brightness.rc)
+add_executable(studio-brightness WIN32 src/main.cpp src/hid.cpp studio-brightness.rc "include/studio_display.h" "src/studio_display.cpp")
 
 target_compile_features(studio-brightness PRIVATE cxx_std_20)
 
